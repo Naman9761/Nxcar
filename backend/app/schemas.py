@@ -36,9 +36,10 @@ class CarCreate(CarBase):
 
 class CarResponse(CarBase):
     """Schema for car response (GET requests)"""
-    id: int
+    id: str  # ✅ ObjectId is a string, not an int
     created_at: datetime
     image_path: Optional[str] = Field(None, description="Image file path or URL")
 
     model_config = ConfigDict(from_attributes=True)
+
 

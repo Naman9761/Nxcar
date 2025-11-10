@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from .database import engine, Base
+from .database import engine, get_engine
 from .routers import cars
 import logging
 import os
@@ -27,7 +27,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://your-frontend-domain.vercel.app"
+        "https://nxcar-naman.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -53,16 +53,7 @@ if os.path.exists(public_path):
 else:
     logger.warning(f"Public directory not found at {public_path}")
 
-# Startup event: Create database tables
-@app.on_event("startup")
-async def startup_event():
-    """Create database tables on application startup"""
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created successfully")
-    except Exception as e:
-        logger.error(f"Error creating database tables: {str(e)}")
-        raise
+# No need to create tables in MongoDB; ODMantic handles collections automatically
 
 # Exception handlers for production best practices
 @app.exception_handler(StarletteHTTPException)
