@@ -75,7 +75,8 @@ pip install -r requirements.txt
 Create a `.env` file inside the `backend` directory:
 
 ```
-DATABASE_URL=sqlite:///./database.db
+DATABASE_URL= mongodb+srv://nexcar-user1:<password>@cluster0.snmswzu.mongodb.net/?appName=Cluster0"
+
 ```
 
 #### ▶️ Run the Backend Server
