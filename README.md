@@ -12,7 +12,7 @@ Built with **FastAPI** (Python) for the backend and **Next.js** (React/TypeScrip
 - Search for cars by make or model
 - Delete car listings
 - Modern, responsive UI with Tailwind CSS and shadcn/ui
-- Persistent data storage (SQLite, easily upgradable to PostgreSQL)
+- Persistent data storage (MongoDB previously using sqlite locally)
 
 ---
 
