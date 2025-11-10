@@ -37,7 +37,15 @@ app.add_middleware(
 # Include routers with prefix
 app.include_router(cars.router, prefix="/api")
 
-# Mount static files directory for images
+# Mount static files directory for images (uploaded car images)
+images_path = os.path.join(os.path.dirname(__file__), "static", "images")
+if os.path.exists(images_path):
+    app.mount("/images", StaticFiles(directory=images_path), name="images")
+    logger.info(f"Car images mounted at /images from {images_path}")
+else:
+    logger.warning(f"Images directory not found at {images_path}")
+
+# Mount static files directory for public assets (if needed)
 public_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "public")
 if os.path.exists(public_path):
     app.mount("/static", StaticFiles(directory=public_path), name="static")

@@ -8,7 +8,8 @@ export interface Car {
   mileage?: number | null
   description?: string | null
   created_at: string // ISO datetime string from backend
-  
+  image_path?: string | null
+
   // Optional frontend-only fields for backward compatibility
   image?: string
   transmission?: "Manual" | "Automatic"

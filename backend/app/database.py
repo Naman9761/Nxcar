@@ -1,15 +1,21 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from typing import Generator
+import os
+from dotenv import load_dotenv
 
-# SQLite database connection
-DATABASE_URL = "sqlite:///./database.db"
+# Load environment variables from .env (if present)
+load_dotenv()
 
-# Create SQLite engine
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Needed for SQLite
-)
+# Read DATABASE_URL from environment, fallback to sqlite file for local dev
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Create engine; for SQLite we need check_same_thread arg
+engine_kwargs = {}
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs = {"connect_args": {"check_same_thread": False}}
+
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

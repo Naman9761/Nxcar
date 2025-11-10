@@ -1,49 +1,53 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { useFavorites } from "@/context/favorites-context"
-import { Heart } from "lucide-react"
-import type { Car } from "@/lib/types"
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useFavorites } from "@/context/favorites-context";
+import { Heart } from "lucide-react";
+import type { Car } from "@/lib/types";
 
 interface CarCardProps {
-  car: Car
-  onViewDetails: (carId: number) => void
-  onDeleteCar: (carId: number) => void
+  car: Car;
+  onViewDetails: (carId: number) => void;
+  onDeleteCar: (carId: number) => void;
 }
 
-export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProps) {
-  const { isFavorite, toggleFavorite } = useFavorites()
-  const isLiked = isFavorite(car.id)
+export default function CarCard({
+  car,
+  onViewDetails,
+  onDeleteCar,
+}: CarCardProps) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isLiked = isFavorite(car.id);
 
   const getConditionColor = () => {
     switch (car.condition) {
       case "Excellent":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "Good":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "Fair":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getFuelTypeInfo = () => {
     switch (car.fuelType) {
       case "Electric":
-        return { icon: "⚡", color: "bg-blue-50" }
+        return { icon: "⚡", color: "bg-blue-50" };
       case "Hybrid":
-        return { icon: "🔋", color: "bg-green-50" }
+        return { icon: "🔋", color: "bg-green-50" };
       case "Diesel":
-        return { icon: "⛽", color: "bg-orange-50" }
+        return { icon: "⛽", color: "bg-orange-50" };
       default:
-        return { icon: "⛽", color: "bg-gray-50" }
+        return { icon: "⛽", color: "bg-gray-50" };
     }
-  }
+  };
 
-  const fuelInfo = getFuelTypeInfo()
+  const fuelInfo = getFuelTypeInfo();
 
   return (
     <Card
@@ -54,15 +58,17 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
         {/* Heart Icon Button */}
         <button
           onClick={(e) => {
-            e.stopPropagation()
-            toggleFavorite(car)
+            e.stopPropagation();
+            toggleFavorite(car);
           }}
           className="absolute top-3 left-3 z-10 p-2 rounded-full bg-white/80 hover:bg-white transition-all hover:scale-110 hover:shadow-lg"
           aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
         >
           <Heart
             className={`w-5 h-5 transition-all ${
-              isLiked ? "fill-red-500 text-red-500" : "text-gray-400 hover:text-red-500"
+              isLiked
+                ? "fill-red-500 text-red-500"
+                : "text-gray-400 hover:text-red-500"
             }`}
           />
         </button>
@@ -77,7 +83,13 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
         )}
 
         <Image
-          src={car.image || "/placeholder.svg"}
+          src={
+            car.image_path
+              ? `${
+                  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+                }/images/${car.image_path}`
+              : car.image || "/placeholder.svg"
+          }
           alt={`${car.make} ${car.model}`}
           fill
           className="object-cover transition-transform duration-300 hover:scale-110"
@@ -117,7 +129,9 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
           {car.transmission && (
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-medium">TRANS</p>
-              <p className="text-sm font-bold text-foreground">{car.transmission[0]}</p>
+              <p className="text-sm font-bold text-foreground">
+                {car.transmission[0]}
+              </p>
             </div>
           )}
 
@@ -125,7 +139,9 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
           {car.color ? (
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-medium">COLOR</p>
-              <p className="text-sm font-bold text-foreground">{car.color.slice(0, 8)}...</p>
+              <p className="text-sm font-bold text-foreground">
+                {car.color.slice(0, 8)}...
+              </p>
             </div>
           ) : (
             <div className="text-center">
@@ -137,8 +153,12 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
 
         {/* Price */}
         <div className="mb-6">
-          <p className="text-xs text-muted-foreground font-medium">ASKING PRICE</p>
-          <p className="text-2xl font-bold text-foreground">${(car.price / 1000).toFixed(1)}K</p>
+          <p className="text-xs text-muted-foreground font-medium">
+            ASKING PRICE
+          </p>
+          <p className="text-2xl font-bold text-foreground">
+            ${(car.price / 1000).toFixed(1)}K
+          </p>
         </div>
 
         {/* Action Buttons */}
@@ -156,7 +176,12 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
             className="border-destructive/50 text-destructive hover:bg-destructive/10"
             size="icon"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -168,5 +193,5 @@ export default function CarCard({ car, onViewDetails, onDeleteCar }: CarCardProp
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

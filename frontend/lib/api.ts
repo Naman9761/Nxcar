@@ -81,14 +81,22 @@ export async function getCarById(id: number): Promise<Car | null> {
 /**
  * Create a new car listing
  */
-export async function createCar(carData: CarCreate): Promise<Car> {
+export async function createCar(carData: CarCreate | FormData): Promise<Car> {
   try {
+    let body: BodyInit
+    let headers: Record<string, string> = {}
+    if (typeof window !== 'undefined' && carData instanceof window.FormData) {
+      body = carData
+      // Let browser set Content-Type for FormData
+    } else {
+      body = JSON.stringify(carData)
+      headers['Content-Type'] = 'application/json'
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/cars`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(carData),
+      headers,
+      body,
     })
 
     if (!response.ok) {
