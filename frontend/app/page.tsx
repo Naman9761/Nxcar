@@ -1,80 +1,128 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import Navbar from "@/components/navbar"
-import SearchBar from "@/components/search-bar"
-import CarListingsGrid from "@/components/car-listings-grid"
-import Footer from "@/components/footer"
-import CarCarousel from "@/components/car-carousel"
-import { getCars, deleteCar as deleteCarApi, ApiException } from "@/lib/api"
-import type { Car } from "@/lib/types"
-import { Sparkles, TrendingUp, Shield, Zap } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Navbar from "@/components/navbar";
+import SearchBar from "@/components/search-bar";
+import CarListingsGrid from "@/components/car-listings-grid";
+import Footer from "@/components/footer";
+import CarCarousel from "@/components/car-carousel";
+import { getCars, deleteCar as deleteCarApi, ApiException } from "@/lib/api";
+import type { Car } from "@/lib/types";
+import { Sparkles, TrendingUp, Shield, Zap } from "lucide-react";
 
 export default function Home() {
-  const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [allCars, setAllCars] = useState<Car[]>([])
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [allCars, setAllCars] = useState<Car[]>([]);
 
   // Fetch cars on mount and when search query changes
   useEffect(() => {
     const fetchCars = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
       try {
-        const cars = await getCars(searchQuery)
-        setAllCars(cars)
+        const cars = await getCars(searchQuery);
+        setAllCars(cars);
       } catch (err) {
-        const errorMessage = err instanceof ApiException 
-          ? err.message 
-          : "Failed to load cars. Please try again later."
-        setError(errorMessage)
-        toast.error(errorMessage)
-        setAllCars([])
+        const errorMessage =
+          err instanceof ApiException
+            ? err.message
+            : "Failed to load cars. Please try again later.";
+        setError(errorMessage);
+        toast.error(errorMessage);
+        setAllCars([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     // Debounce search to avoid excessive API calls
-    const timeoutId = setTimeout(() => {
-      fetchCars()
-    }, searchQuery ? 300 : 0)
+    const timeoutId = setTimeout(
+      () => {
+        fetchCars();
+      },
+      searchQuery ? 300 : 0
+    );
 
-    return () => clearTimeout(timeoutId)
-  }, [searchQuery])
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
-  const featuredCar = allCars[0]
+  const featuredCar = allCars[0];
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query)
-  }
+    setSearchQuery(query);
+  };
 
   const handleViewDetails = (carId: number) => {
-    router.push(`/car/${carId}`)
-  }
+    router.push(`/car/${carId}`);
+  };
 
   const handleDeleteCar = async (carId: number) => {
-    if (!confirm(`Are you sure you want to delete this car?`)) {
-      return
-    }
+    // Show a modern confirmation toast with actions
+    toast.custom((t) => (
+      <div className="max-w-md w-full bg-card border border-border rounded-lg p-4 flex flex-col gap-4 shadow-lg">
+        <div className="flex items-start gap-3">
+          <svg
+            className="w-6 h-6 text-destructive"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-7 4h10"
+            />
+          </svg>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Delete listing
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this car? This action cannot be
+              undone.
+            </p>
+          </div>
+        </div>
 
-    try {
-      await deleteCarApi(carId)
-      toast.success("Car deleted successfully")
-      // Refresh the car list
-      const cars = await getCars(searchQuery)
-      setAllCars(cars)
-    } catch (err) {
-      const errorMessage = err instanceof ApiException 
-        ? err.message 
-        : "Failed to delete car. Please try again."
-      toast.error(errorMessage)
-    }
-  }
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-2 bg-background border rounded-md text-sm hover:bg-muted transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              // Dismiss confirmation toast
+              toast.dismiss(t.id);
+              try {
+                await deleteCarApi(carId);
+                toast.success("Car deleted successfully");
+                // Refresh the car list
+                const cars = await getCars(searchQuery);
+                setAllCars(cars);
+              } catch (err) {
+                const errorMessage =
+                  err instanceof ApiException
+                    ? err.message
+                    : "Failed to delete car. Please try again.";
+                toast.error(errorMessage);
+              }
+            }}
+            className="px-3 py-2 bg-destructive text-destructive-foreground rounded-md text-sm hover:opacity-95 transition"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ));
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -85,8 +133,14 @@ export default function Home() {
         <div className="relative bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden">
           {/* Animated Background Elements */}
           <div className="absolute -right-20 -top-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-float" style={{ animationDelay: "4s" }}></div>
+          <div
+            className="absolute -left-20 -bottom-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: "2s" }}
+          ></div>
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: "4s" }}
+          ></div>
 
           <div className="mx-auto max-w-7xl px-4 py-16 sm:py-24 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -96,16 +150,18 @@ export default function Home() {
                   <Sparkles className="w-4 h-4" />
                   Premium Car Marketplace
                 </div>
-                
+
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
                   Find Your
                   <span className="block bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                     Perfect Ride
                   </span>
                 </h1>
-                
+
                 <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-                  Discover premium used vehicles with verified listings, detailed specifications, and trusted seller information. Your dream car is just a click away.
+                  Discover premium used vehicles with verified listings,
+                  detailed specifications, and trusted seller information. Your
+                  dream car is just a click away.
                 </p>
 
                 {/* Stats Section */}
@@ -115,7 +171,9 @@ export default function Home() {
                       <TrendingUp className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-foreground">{allCars.length}+</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {allCars.length}+
+                      </p>
                       <p className="text-sm text-muted-foreground">Listings</p>
                     </div>
                   </div>
@@ -146,8 +204,18 @@ export default function Home() {
                       className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-lg"
                     >
                       Explore Collection
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      <svg
+                        className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
                       </svg>
                     </button>
                     <button
@@ -162,7 +230,10 @@ export default function Home() {
 
               {/* Carousel with Enhanced Animation */}
               {allCars.length > 0 && (
-                <div className="animate-slideUp" style={{ animationDelay: "0.2s" }}>
+                <div
+                  className="animate-slideUp"
+                  style={{ animationDelay: "0.2s" }}
+                >
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-3xl blur-2xl -z-10"></div>
                     <CarCarousel cars={allCars} />
@@ -184,7 +255,10 @@ export default function Home() {
                 Search through our extensive collection of premium vehicles
               </p>
             </div>
-            <div className="relative animate-slideUp" style={{ animationDelay: "0.3s" }}>
+            <div
+              className="relative animate-slideUp"
+              style={{ animationDelay: "0.3s" }}
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl blur-xl"></div>
               <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 shadow-xl">
                 <SearchBar onSearch={handleSearch} />
@@ -202,7 +276,9 @@ export default function Home() {
                   <div className="p-2 bg-gradient-to-br from-primary to-accent rounded-lg">
                     <Sparkles className="w-6 h-6 text-primary-foreground" />
                   </div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-foreground">Featured Collection</h2>
+                  <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
+                    Featured Collection
+                  </h2>
                 </div>
                 <p className="text-muted-foreground text-lg">
                   Handpicked premium vehicles just for you
@@ -211,7 +287,9 @@ export default function Home() {
               {allCars.length > 0 && (
                 <div className="px-6 py-3 bg-muted rounded-full">
                   <span className="text-sm font-semibold text-muted-foreground">
-                    Showing <span className="text-foreground">{allCars.length}</span> {allCars.length === 1 ? 'vehicle' : 'vehicles'}
+                    Showing{" "}
+                    <span className="text-foreground">{allCars.length}</span>{" "}
+                    {allCars.length === 1 ? "vehicle" : "vehicles"}
                   </span>
                 </div>
               )}
@@ -239,19 +317,25 @@ export default function Home() {
                     d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <h3 className="mt-4 text-xl font-semibold text-foreground">Error loading cars</h3>
+                <h3 className="mt-4 text-xl font-semibold text-foreground">
+                  Error loading cars
+                </h3>
                 <p className="mt-2 text-muted-foreground">{error}</p>
                 <button
                   onClick={() => {
-                    setError(null)
-                    setIsLoading(true)
+                    setError(null);
+                    setIsLoading(true);
                     getCars(searchQuery)
                       .then(setAllCars)
                       .catch((err) => {
-                        setError(err instanceof ApiException ? err.message : "Failed to load cars")
-                        toast.error("Failed to reload cars")
+                        setError(
+                          err instanceof ApiException
+                            ? err.message
+                            : "Failed to load cars"
+                        );
+                        toast.error("Failed to reload cars");
                       })
-                      .finally(() => setIsLoading(false))
+                      .finally(() => setIsLoading(false));
                   }}
                   className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
                 >
@@ -282,9 +366,11 @@ export default function Home() {
                     d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <h3 className="mt-4 text-xl font-semibold text-foreground">No cars found</h3>
+                <h3 className="mt-4 text-xl font-semibold text-foreground">
+                  No cars found
+                </h3>
                 <p className="mt-2 text-muted-foreground">
-                  {searchQuery 
+                  {searchQuery
                     ? "Try adjusting your search criteria to find the perfect car."
                     : "No cars available. Be the first to add a listing!"}
                 </p>
@@ -296,5 +382,5 @@ export default function Home() {
 
       <Footer />
     </div>
-  )
+  );
 }

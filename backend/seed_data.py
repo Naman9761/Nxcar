@@ -4,11 +4,13 @@ Run this script to populate the database with sample car listings
 """
 from app.database import SessionLocal, engine, Base
 from app.models import Car
+import shutil
+import os
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
 
-# Sample car data - only fields that exist in Car model
+# Sample car data with image paths
 sample_cars = [
     {
         "make": "Tesla",
@@ -17,6 +19,7 @@ sample_cars = [
         "price": 45000.0,
         "mileage": 12500,
         "description": "Low mileage Tesla Model 3 with full autopilot capabilities. Recent service, excellent condition.",
+        "image_path": "tesla-model-3.png"
     },
     {
         "make": "BMW",
@@ -25,6 +28,7 @@ sample_cars = [
         "price": 42000.0,
         "mileage": 25000,
         "description": "Premium sedan with luxury features. Well maintained with service history.",
+        "image_path": "bmw-3-series.png"
     },
     {
         "make": "Honda",
@@ -33,6 +37,7 @@ sample_cars = [
         "price": 28000.0,
         "mileage": 35000,
         "description": "Reliable Honda Civic with good fuel economy. Perfect for daily commuting.",
+        "image_path": "honda-civic.png"
     },
     {
         "make": "Toyota",
@@ -41,6 +46,7 @@ sample_cars = [
         "price": 35000.0,
         "mileage": 8000,
         "description": "Efficient hybrid sedan with advanced safety features. Excellent fuel economy.",
+        "image_path": "toyota-camry-car.jpg"
     },
     {
         "make": "Ford",
@@ -49,6 +55,7 @@ sample_cars = [
         "price": 52000.0,
         "mileage": 18000,
         "description": "Powerful Mustang with excellent performance. Immaculate condition.",
+        "image_path": "ford-mustang-car.jpg"
     },
     {
         "make": "Audi",
@@ -57,25 +64,34 @@ sample_cars = [
         "price": 48000.0,
         "mileage": 5000,
         "description": "Luxury Audi with cutting-edge technology. Virtually brand new.",
-    },
+        "image_path": "audi-a4-car.jpg"
+    }
 ]
 
 
 def seed_database():
-    """Add sample cars to the database"""
+    """Add sample cars to the database and copy their images"""
     db = SessionLocal()
     try:
-        # Check if cars already exist
-        existing_count = db.query(Car).count()
-        if existing_count > 0:
-            print(f"Database already contains {existing_count} cars. Skipping seed.")
-            return
-        
-        # Add sample cars
+        # Create images directory if it doesn't exist
+        images_dir = os.path.join("app", "static", "images")
+        os.makedirs(images_dir, exist_ok=True)
+
+        # Copy sample images from public directory to static/images
+        public_dir = os.path.join("public")
+        if os.path.exists(public_dir):
+            for car_data in sample_cars:
+                src_path = os.path.join(public_dir, car_data["image_path"])
+                if os.path.exists(src_path):
+                    dst_path = os.path.join(images_dir, car_data["image_path"])
+                    shutil.copy2(src_path, dst_path)
+                    print(f"Copied image: {car_data['image_path']}")
+
+        # Add sample cars to database
         for car_data in sample_cars:
             car = Car(**car_data)
             db.add(car)
-        
+
         db.commit()
         print(f"Successfully added {len(sample_cars)} cars to the database!")
     except Exception as e:

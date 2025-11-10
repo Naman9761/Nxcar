@@ -7,7 +7,7 @@ from .database import Base
 
 class Car(Base):
     __tablename__ = "cars"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, index=True)
     make: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     model: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -20,4 +20,5 @@ class Car(Base):
         server_default=func.now(),
         nullable=False
     )
+    image_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
