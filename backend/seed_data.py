@@ -1,14 +1,13 @@
+
 """
-Script to seed the database with initial car data
+Script to seed the MongoDB database with initial car data using ODMantic
 Run this script to populate the database with sample car listings
 """
-from app.database import SessionLocal, engine, Base
-from app.models import Car
 import shutil
 import os
-
-# Create tables if they don't exist
-Base.metadata.create_all(bind=engine)
+import asyncio
+from app.database import engine
+from app.models import Car
 
 # Sample car data with image paths
 sample_cars = [
@@ -69,40 +68,35 @@ sample_cars = [
 ]
 
 
-def seed_database():
-    """Add sample cars to the database and copy their images"""
-    db = SessionLocal()
-    try:
-        # Create images directory if it doesn't exist
-        images_dir = os.path.join("app", "static", "images")
-        os.makedirs(images_dir, exist_ok=True)
 
-        # Copy sample images from public directory to static/images
-        public_dir = os.path.join("public")
-        if os.path.exists(public_dir):
-            for car_data in sample_cars:
-                src_path = os.path.join(public_dir, car_data["image_path"])
-                if os.path.exists(src_path):
-                    dst_path = os.path.join(images_dir, car_data["image_path"])
-                    shutil.copy2(src_path, dst_path)
-                    print(f"Copied image: {car_data['image_path']}")
+async def seed_database():
+    """Add sample cars to MongoDB and copy their images"""
+    # Create images directory if it doesn't exist
+    images_dir = os.path.join("app", "static", "images")
+    os.makedirs(images_dir, exist_ok=True)
 
-        # Add sample cars to database
+    # Copy sample images from public directory to static/images
+    public_dir = os.path.join("public")
+    if os.path.exists(public_dir):
         for car_data in sample_cars:
-            car = Car(**car_data)
-            db.add(car)
+            src_path = os.path.join(public_dir, car_data["image_path"])
+            if os.path.exists(src_path):
+                dst_path = os.path.join(images_dir, car_data["image_path"])
+                shutil.copy2(src_path, dst_path)
+                print(f"Copied image: {car_data['image_path']}")
 
-        db.commit()
-        print(f"Successfully added {len(sample_cars)} cars to the database!")
+    # Add sample cars to MongoDB
+    cars = [Car(**car_data) for car_data in sample_cars]
+    try:
+        await engine.save_all(cars)
+        print(f"Successfully added {len(sample_cars)} cars to MongoDB!")
     except Exception as e:
-        db.rollback()
-        print(f"Error seeding database: {e}")
+        print(f"Error seeding MongoDB: {e}")
         raise
-    finally:
-        db.close()
+
 
 if __name__ == "__main__":
-    print("Seeding database with sample car data...")
-    seed_database()
+    print("Seeding MongoDB with sample car data...")
+    asyncio.run(seed_database())
     print("Done!")
 

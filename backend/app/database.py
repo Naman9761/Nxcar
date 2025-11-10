@@ -1,34 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
-from typing import Generator
+
+# ODMantic/MongoDB setup
 import os
 from dotenv import load_dotenv
+from odmantic import AIOEngine
+from motor.motor_asyncio import AsyncIOMotorClient
 
-# Load environment variables from .env (if present)
 load_dotenv()
 
-# Read DATABASE_URL from environment, fallback to sqlite file for local dev
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Read MongoDB connection string from environment variable
+MONGODB_URL = os.getenv("DATABASE_URL")
+if not MONGODB_URL:
+    raise RuntimeError("DATABASE_URL environment variable not set for MongoDB connection.")
 
-# Create engine; for SQLite we need check_same_thread arg
-engine_kwargs = {}
-if DATABASE_URL.startswith("sqlite"):
-    engine_kwargs = {"connect_args": {"check_same_thread": False}}
+# Create Motor client and ODMantic engine
+client = AsyncIOMotorClient(MONGODB_URL)
+engine = AIOEngine(client=client, database="nxcar")
 
-engine = create_engine(DATABASE_URL, **engine_kwargs)
-
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create Base class for models
-class Base(DeclarativeBase):
-    pass
-
-# Dependency to get DB session
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Dependency for FastAPI
+async def get_engine():
+    yield engine
 
