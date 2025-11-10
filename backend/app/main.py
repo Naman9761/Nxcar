@@ -2,10 +2,9 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from .database import engine, get_engine
 from .routers import cars
+from .database import get_engine  # Only import get_engine
 import logging
 import os
 
@@ -27,7 +26,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://nxcar-naman.vercel.app"
+        "https://nxcar-naman.vercel.app",
+        "https://nxcar-naman.vercel.app/"  # Add with trailing slash too
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -37,28 +37,15 @@ app.add_middleware(
 # Include routers with prefix
 app.include_router(cars.router, prefix="/api")
 
-# Mount static files directory for images (uploaded car images)
-images_path = os.path.join(os.path.dirname(__file__), "static", "images")
-if os.path.exists(images_path):
-    app.mount("/images", StaticFiles(directory=images_path), name="images")
-    logger.info(f"Car images mounted at /images from {images_path}")
-else:
-    logger.warning(f"Images directory not found at {images_path}")
-
-# Mount static files directory for public assets (if needed)
-public_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "public")
-if os.path.exists(public_path):
-    app.mount("/static", StaticFiles(directory=public_path), name="static")
-    logger.info(f"Static files mounted at /static from {public_path}")
-else:
-    logger.warning(f"Public directory not found at {public_path}")
-
-# No need to create tables in MongoDB; ODMantic handles collections automatically
+# Note: Static files don't work well in Vercel serverless
+# Consider using Cloudinary, AWS S3, or Vercel Blob for images
+# For now, we'll skip mounting static files in production
 
 # Exception handlers for production best practices
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Handle HTTP exceptions with proper error responses"""
+    logger.error(f"HTTP exception: {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -71,6 +58,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle validation errors with detailed error messages"""
+    logger.error(f"Validation error: {exc.errors()}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -89,6 +77,7 @@ async def general_exception_handler(request: Request, exc: Exception):
         content={
             "error": True,
             "message": "Internal server error",
+            "details": str(exc) if os.getenv("DEBUG") else None,
             "status_code": 500
         }
     )
@@ -113,13 +102,23 @@ def root():
     }
 
 @app.get("/health", tags=["Health"])
-def health_check():
+async def health_check():
     """
     Health check endpoint for monitoring and load balancers.
-    Returns API health status.
     """
-    return {
-        "status": "healthy",
-        "service": "Used Car Listing API"
-    }
+    try:
+        # Test MongoDB connection
+        from .database import get_engine_instance
+        engine = get_engine_instance()
+        # Ping the database
+        await engine.client.admin.command('ping')
+        db_status = "connected"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "disconnected"
 
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "service": "Used Car Listing API",
+        "database": db_status
+    }
