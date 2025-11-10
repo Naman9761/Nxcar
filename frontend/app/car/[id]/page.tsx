@@ -22,16 +22,15 @@ import type { Car } from "@/lib/types";
 export default function CarDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const carId = Number.parseInt(params.id as string);
+  const carId = params.id as string; // ✅ Use string instead of number
 
   const [car, setCar] = useState<Car | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isContactFormOpen, setIsContactFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchCar = async () => {
-      if (isNaN(carId)) {
+      if (!carId) {
         setError("Invalid car ID");
         setIsLoading(false);
         return;
@@ -40,7 +39,7 @@ export default function CarDetailsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const fetchedCar = await getCarById(carId);
+        const fetchedCar = await getCarById(carId); // ✅ Works with string IDs
         if (!fetchedCar) {
           setError("Car not found");
         } else {
