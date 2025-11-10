@@ -12,17 +12,29 @@ export default function CarCarousel({ cars }: CarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(true);
 
+  // ✅ Guard against empty cars array
+  const hasCars = cars && cars.length > 0;
+  const currentCar = hasCars ? cars[currentIndex] : null;
+
   useEffect(() => {
-    if (!isAutoplay) return;
+    if (!isAutoplay || !hasCars) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % cars.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoplay, cars.length]);
+  }, [isAutoplay, cars.length, hasCars]);
 
-  const currentCar = cars[currentIndex];
+  if (!hasCars || !currentCar) {
+    return (
+      <div className="h-96 flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-2xl">
+        <p className="text-gray-500 dark:text-gray-400 text-lg animate-pulse">
+          Loading cars...
+        </p>
+      </div>
+    );
+  }
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % cars.length);
@@ -40,11 +52,10 @@ export default function CarCarousel({ cars }: CarouselProps) {
       onMouseEnter={() => setIsAutoplay(false)}
       onMouseLeave={() => setIsAutoplay(true)}
     >
-      {/* Background carousel effect */}
+      {/* Background carousel */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent dark:via-white/2"></div>
 
-        {/* Current car image with animation */}
         <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
           {cars.map((car, idx) => (
             <div
@@ -73,20 +84,17 @@ export default function CarCarousel({ cars }: CarouselProps) {
           ))}
         </div>
 
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
       </div>
 
-      {/* Content overlay */}
+      {/* Overlay content */}
       <div className="absolute inset-0 flex flex-col justify-between p-6 z-10">
-        {/* Top info */}
         <div className="animate-slideUp">
           <span className="inline-block px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-gray-900 mb-3">
             Featured Vehicle
           </span>
         </div>
 
-        {/* Center car info */}
         <div
           className="text-center animate-slideUp"
           style={{ animationDelay: "0.1s" }}
@@ -99,7 +107,6 @@ export default function CarCarousel({ cars }: CarouselProps) {
           </p>
         </div>
 
-        {/* Navigation controls */}
         <div className="flex items-center justify-between">
           <button
             onClick={prevSlide}
@@ -121,7 +128,6 @@ export default function CarCarousel({ cars }: CarouselProps) {
             </svg>
           </button>
 
-          {/* Indicator dots */}
           <div className="flex gap-2">
             {cars.map((_, idx) => (
               <button

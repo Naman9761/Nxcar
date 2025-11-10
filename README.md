@@ -1,17 +1,17 @@
 # 🚗 Used Car Listing Platform
 
-A full-stack web application to **view, add, search, and delete used car listings**.  
+A full-stack web application to **view, add, search, and delete used car listings**.
 Built with **FastAPI** (Python) for the backend and **Next.js** (React/TypeScript, v0.dev UI) for the frontend.
 
 ---
 
 ## 🌟 Features
 
-- View all listed cars  
-- Add new cars (make, model, year, price, mileage, description)  
-- Search for cars by make or model  
-- Delete car listings  
-- Modern, responsive UI with Tailwind CSS and shadcn/ui  
+- View all listed cars
+- Add new cars (make, model, year, price, mileage, description)
+- Search for cars by make or model
+- Delete car listings
+- Modern, responsive UI with Tailwind CSS and shadcn/ui
 - Persistent data storage (SQLite, easily upgradable to PostgreSQL)
 
 ---
@@ -20,7 +20,7 @@ Built with **FastAPI** (Python) for the backend and **Next.js** (React/TypeScrip
 
 | Layer | Technology |
 |-------|-------------|
-| **Backend** | FastAPI + SQLAlchemy + SQLite |
+| **Backend** | FastAPI + Odmantic (MongoDB ODM) + Pydantic + Uvicorn |
 | **Frontend** | Next.js (App Router) + TypeScript + Tailwind CSS |
 | **API Client** | Axios |
 | **UI Library** | shadcn/ui (React components) |
@@ -29,8 +29,8 @@ Built with **FastAPI** (Python) for the backend and **Next.js** (React/TypeScrip
 
 ## ⚙️ Prerequisites
 
-- **Python 3.9+** (for backend)  
-- **Node.js 18+ & npm** (for frontend)  
+- **Python 3.9+** (for backend)
+- **Node.js 18+ & npm** (for frontend)
 - **Git**
 
 ---
@@ -115,7 +115,7 @@ npm run dev
 
 ### 4. 🧑‍💻 Using the App
 
-1. Go to [http://localhost:3000](http://localhost:3000)  
+1. Go to [http://localhost:3000](http://localhost:3000)
 2. Add, view, search, and delete car listings easily!
 
 ---
@@ -168,11 +168,11 @@ Nxcar/
 
 ## 👨‍💻 Author
 
-**Naman**  
+**Naman**
 🔗 [GitHub Profile](https://github.com/Naman9761)
 
 ---
 
 ### ✅ Ready to use!
-Clone, set up, and start hacking.  
+Clone, set up, and start hacking.
 **Happy coding! 🚀**

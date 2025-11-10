@@ -62,10 +62,10 @@ export async function getCars(searchQuery?: string): Promise<Car[]> {
 }
 
 /**
- * Get a single car by ID
+ * Get a single car by string ID
  * Note: Backend doesn't have this endpoint, so we fetch all and filter
  */
-export async function getCarById(id: number): Promise<Car | null> {
+export async function getCarById(id: string): Promise<Car | null> {
   try {
     const cars = await getCars()
     const car = cars.find((c) => c.id === id)
@@ -123,9 +123,9 @@ export async function createCar(carData: CarCreate | FormData): Promise<Car> {
 }
 
 /**
- * Delete a car by ID
+ * Delete a car by string ID
  */
-export async function deleteCar(id: number): Promise<void> {
+export async function deleteCar(id: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/cars/${id}`, {
       method: 'DELETE',

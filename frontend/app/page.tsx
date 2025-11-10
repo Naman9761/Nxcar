@@ -18,6 +18,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allCars, setAllCars] = useState<Car[]>([]);
+  const [filteredCars, setFilteredCars] = useState<Car[]>([]);
 
   // Fetch cars on mount and when search query changes
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function Home() {
       try {
         const cars = await getCars(searchQuery);
         setAllCars(cars);
+        setFilteredCars(cars); // Initialize filteredCars with all cars
       } catch (err) {
         const errorMessage =
           err instanceof ApiException
@@ -35,6 +37,7 @@ export default function Home() {
         setError(errorMessage);
         toast.error(errorMessage);
         setAllCars([]);
+        setFilteredCars([]); // Ensure filteredCars is also emptied
       } finally {
         setIsLoading(false);
       }
@@ -50,6 +53,22 @@ export default function Home() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  // Update filteredCars when allCars is fetched or searchQuery changes
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredCars(allCars); // Show all cars when search query is empty
+    } else {
+      const lowerCasedQuery = searchQuery.toLowerCase();
+      setFilteredCars(
+        allCars.filter(
+          (car) =>
+            car.make.toLowerCase().includes(lowerCasedQuery) ||
+            car.model.toLowerCase().includes(lowerCasedQuery)
+        )
+      );
+    }
+  }, [allCars, searchQuery]);
 
   const featuredCar = allCars[0];
 
@@ -107,6 +126,7 @@ export default function Home() {
                 // Refresh the car list
                 const cars = await getCars(searchQuery);
                 setAllCars(cars);
+                setFilteredCars(cars); // Update filteredCars as well
               } catch (err) {
                 const errorMessage =
                   err instanceof ApiException
@@ -236,7 +256,9 @@ export default function Home() {
                 >
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-3xl blur-2xl -z-10"></div>
-                    <CarCarousel cars={allCars} />
+                    <CarCarousel
+                      cars={filteredCars.length > 0 ? filteredCars : allCars}
+                    />
                   </div>
                 </div>
               )}
