@@ -5,10 +5,10 @@ import CarCardSkeleton from "@/components/car-card-skeleton"
 import type { Car } from "@/lib/types"
 
 interface CarListingsGridProps {
-  cars: Car[]
-  isLoading: boolean
-  onViewDetails: (carId: number) => void
-  onDeleteCar: (carId: number) => void
+  cars: Car[];
+  isLoading: boolean;
+  onViewDetails: (carId: string) => void;
+  onDeleteCar: (carId: string) => void;
 }
 
 export default function CarListingsGrid({ cars, isLoading, onViewDetails, onDeleteCar }: CarListingsGridProps) {

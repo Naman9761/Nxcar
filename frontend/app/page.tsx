@@ -20,54 +20,44 @@ export default function Home() {
   const [allCars, setAllCars] = useState<Car[]>([]);
   const [filteredCars, setFilteredCars] = useState<Car[]>([]);
 
-  // Fetch cars on mount and when search query changes
   useEffect(() => {
+    // Only fetch once on mount, no params
     const fetchCars = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const cars = await getCars(searchQuery);
+        const cars = await getCars();
         setAllCars(cars);
-        setFilteredCars(cars); // Initialize filteredCars with all cars
+        setFilteredCars(cars); // Initialize filteredCars to all cars
       } catch (err) {
-        const errorMessage =
-          err instanceof ApiException
-            ? err.message
-            : "Failed to load cars. Please try again later.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-        setAllCars([]);
-        setFilteredCars([]); // Ensure filteredCars is also emptied
+        setError("Failed to load cars");
       } finally {
         setIsLoading(false);
       }
     };
+    fetchCars();
+  }, []);
 
-    // Debounce search to avoid excessive API calls
-    const timeoutId = setTimeout(
-      () => {
-        fetchCars();
-      },
-      searchQuery ? 300 : 0
-    );
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  // Update filteredCars when allCars is fetched or searchQuery changes
+  // Local frontend filtering for search
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredCars(allCars); // Show all cars when search query is empty
-    } else {
-      const lowerCasedQuery = searchQuery.toLowerCase();
-      setFilteredCars(
-        allCars.filter(
-          (car) =>
-            car.make.toLowerCase().includes(lowerCasedQuery) ||
-            car.model.toLowerCase().includes(lowerCasedQuery)
-        )
-      );
+    const lowerCasedQuery = searchQuery.trim().toLowerCase();
+    if (!lowerCasedQuery) {
+      setFilteredCars(allCars);
+      return;
     }
+    setFilteredCars(
+      allCars.filter((car) => {
+        const { make = '', model = '', year = '', color = '', description = '' } = car;
+        // Extendable: add more fields here easily
+        return (
+          make.toLowerCase().includes(lowerCasedQuery) ||
+          model.toLowerCase().includes(lowerCasedQuery) ||
+          String(year).includes(lowerCasedQuery) ||
+          color?.toLowerCase().includes(lowerCasedQuery) ||
+          description?.toLowerCase().includes(lowerCasedQuery)
+        );
+      })
+    );
   }, [allCars, searchQuery]);
 
   const featuredCar = allCars[0];
@@ -76,57 +66,43 @@ export default function Home() {
     setSearchQuery(query);
   };
 
-  const handleViewDetails = (carId: number) => {
+  const handleViewDetails = (carId: string) => {
     router.push(`/car/${carId}`);
   };
 
-  const handleDeleteCar = async (carId: number) => {
-    // Show a modern confirmation toast with actions
+  const handleDeleteCar = async (carId: string) => {
     toast.custom((t) => (
       <div className="max-w-md w-full bg-card border border-border rounded-lg p-4 flex flex-col gap-4 shadow-lg">
         <div className="flex items-start gap-3">
-          <svg
-            className="w-6 h-6 text-destructive"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-7 4h10"
-            />
+          <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-7 4h10" />
           </svg>
           <div>
-            <p className="text-sm font-semibold text-foreground">
-              Delete listing
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Are you sure you want to delete this car? This action cannot be
-              undone.
-            </p>
+            <p className="text-sm font-semibold text-foreground">Delete listing</p>
+            <p className="text-sm text-muted-foreground">Are you sure you want to delete this car? This action cannot be undone.</p>
           </div>
         </div>
-
         <div className="flex gap-2 justify-end">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-3 py-2 bg-background border rounded-md text-sm hover:bg-muted transition"
-          >
-            Cancel
-          </button>
+          <button onClick={() => toast.dismiss(t.id)} className="px-3 py-2 bg-background border rounded-md text-sm hover:bg-muted transition">Cancel</button>
           <button
             onClick={async () => {
-              // Dismiss confirmation toast
               toast.dismiss(t.id);
               try {
                 await deleteCarApi(carId);
                 toast.success("Car deleted successfully");
-                // Refresh the car list
-                const cars = await getCars(searchQuery);
+                // Re-fetch all cars (refresh list after delete)
+                setIsLoading(true);
+                const cars = await getCars();
                 setAllCars(cars);
-                setFilteredCars(cars); // Update filteredCars as well
+                setFilteredCars(
+                  !searchQuery
+                    ? cars
+                    : cars.filter((car) =>
+                        car.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        car.model.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                );
+                setIsLoading(false);
               } catch (err) {
                 const errorMessage =
                   err instanceof ApiException
@@ -347,7 +323,7 @@ export default function Home() {
                   onClick={() => {
                     setError(null);
                     setIsLoading(true);
-                    getCars(searchQuery)
+                    getCars()
                       .then(setAllCars)
                       .catch((err) => {
                         setError(
@@ -364,10 +340,10 @@ export default function Home() {
                   Retry
                 </button>
               </div>
-            ) : allCars.length > 0 ? (
+            ) : filteredCars.length > 0 ? (
               <div className="animate-fadeIn">
                 <CarListingsGrid
-                  cars={allCars}
+                  cars={filteredCars}
                   isLoading={false}
                   onViewDetails={handleViewDetails}
                   onDeleteCar={handleDeleteCar}

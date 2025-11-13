@@ -12,27 +12,13 @@ router = APIRouter(prefix="/cars", tags=["cars"])
 @router.get("/", response_model=List[CarResponse], status_code=status.HTTP_200_OK)
 async def get_cars(
     request: Request,
-    q: Optional[str] = Query(None, description="Search query for make or model (case-insensitive)"),
     engine: AIOEngine = Depends(get_engine)
 ):
     """
-    Fetch all cars with optional search functionality.
+    Fetch all cars. No backend search/filtering.
     """
     try:
-        if q:
-            # Case-insensitive search for make or model
-            cars = await engine.find(
-                Car,
-                {
-                    "$or": [
-                        {"make": {"$regex": q, "$options": "i"}},
-                        {"model": {"$regex": q, "$options": "i"}}
-                    ]
-                }
-            )
-        else:
-            cars = await engine.find(Car)
-
+        cars = await engine.find(Car)
         base_url = str(request.base_url).rstrip('/') if request else "http://localhost:8000"
         car_responses = []
         for car in cars:

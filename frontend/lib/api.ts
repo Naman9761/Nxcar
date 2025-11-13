@@ -20,19 +20,16 @@ export class ApiException extends Error {
 /**
  * Fetch all cars with optional search query
  */
-export async function getCars(searchQuery?: string): Promise<Car[]> {
+export async function getCars(): Promise<Car[]> {
   try {
-    const url = new URL(`${API_BASE_URL}/api/cars`)
-    if (searchQuery && searchQuery.trim()) {
-      url.searchParams.append('q', searchQuery.trim())
-    }
-
+    const url = new URL(`${API_BASE_URL}/api/cars`);
+    // Always fetch all cars, no searchQuery needed
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-    })
+    });
 
     if (!response.ok) {
       const errorData: ApiError = await response.json().catch(() => ({
@@ -155,12 +152,5 @@ export async function deleteCar(id: string): Promise<void> {
     }
     throw new ApiException(0, 'Network error: Failed to delete car')
   }
-}
-
-/**
- * Search cars by make or model
- */
-export async function searchCars(query: string): Promise<Car[]> {
-  return getCars(query)
 }
 

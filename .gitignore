@@ -22,8 +22,6 @@ backend/venv/
 backend/ENV/
 backend/.env
 backend/.env.local
-backend/database.db
-backend/*.db
 backend/*.sqlite
 backend/*.sqlite3
 

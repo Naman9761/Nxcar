@@ -9,8 +9,8 @@ import type { Car } from "@/lib/types";
 
 interface CarCardProps {
   car: Car;
-  onViewDetails: (carId: number) => void;
-  onDeleteCar: (carId: number) => void;
+  onViewDetails: (carId: string) => void;
+  onDeleteCar: (carId: string) => void;
 }
 
 export default function CarCard({
